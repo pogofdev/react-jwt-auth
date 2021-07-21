@@ -27,6 +27,10 @@ class UserService {
   async transferTokens(recipient,amount) {
       return await axios.post(API_URL + 'user/transfer', {recipient,amount}, {headers: authHeader()});
   }
+
+  async getUserTransactions() {
+      return await axios.post(API_URL + 'user/transactions', {}, {headers: authHeader()});
+  }
 }
 
 export default new UserService();

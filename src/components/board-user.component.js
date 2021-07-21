@@ -1,9 +1,24 @@
 import React, {Component} from "react";
 import UserService from "../services/user.service";
-import {Button, Form, Input, InputNumber, Modal, notification, PageHeader, Row, Statistic, Tag} from 'antd';
+import {Button, Form, Input, InputNumber, Modal, notification, PageHeader, Row, Statistic, Table, Tag} from 'antd';
 import {ExclamationCircleOutlined} from '@ant-design/icons';
-import {currencyParser, pointFormatter} from "../Utils";
+import {currencyParser, format_Number_int, formatMoney, pointFormatter} from "../Utils";
+import  * as moment from 'moment'
 
+const data = [
+    {
+        amount: -1,
+        balance: 5,
+        description: "",
+        from: "poisongas",
+        fromUpdatedBalance: 5,
+        timeStamp: "1626870312345",
+        to: "integrate",
+        toUpdatedBalance: 10022,
+        transType: "TRANSFER_TOKENS"
+    },
+
+];
 
 export default class BoardUser extends Component {
 
@@ -17,16 +32,62 @@ export default class BoardUser extends Component {
             newAmount: 0,
             recipient:'',
             totalSupply: 0,
+            transactions:[],
             balance: 0
         };
         this.myRef = React.createRef();
         this.myRef1 = React.createRef();
+        this.columns = [
+            {
+
+                title: 'From',
+                dataIndex: 'from',
+                render: from => {
+                    return <div style={{textAlign:"left"}}>{from}</div>
+                },
+            },
+            {
+                title: 'To',
+                dataIndex: 'to',
+                render: to => {
+                    return <div style={{textAlign:"left"}}>{to}</div>
+                },
+            },
+            {
+                title: 'Amount',
+                dataIndex: 'amount',
+                render: amount => {
+                    return <div style={{textAlign:"right"}}>{format_Number_int(amount)}</div>
+                },
+            },
+            {
+                title: 'Trans Type',
+                dataIndex: 'transType',
+                render: transType => {
+                    return <div style={{textAlign:"right"}}>{(transType)}</div>
+                },
+            },
+            {
+                title: 'Balance after transaction',
+                dataIndex: 'balance',
+                render: balance => {
+                    return <div style={{textAlign:"right"}}>{format_Number_int(balance)}</div>
+                },
+            },
+            {
+                title: 'Transfer date',
+                dataIndex: 'timeStamp',
+                render: timeStamp => {
+                    return <div style={{textAlign:"right"}}>{ moment.unix(timeStamp/1000).format("DD/MM/YYYY HH:MM")}</div>
+                },
+            },
+        ];
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         UserService.getUserBoard().then(
             response => {
-                console.log(`====>`, response)
+
                 this.setState({
                     ...response.data,
                 });
@@ -42,6 +103,31 @@ export default class BoardUser extends Component {
                 });
             }
         );
+
+        let transactions = await UserService.getUserTransactions(this.state.recipient, this.state.newAmount)
+        // console.log(`====>`, transactions)
+        this.setState({
+            transactions:transactions.data
+        })
+
+        /*UserService.getUserTransactions().then(
+            response => {
+                console.log(`====>`, response)
+                /!* this.setState({
+                     ...response.data,
+                 });*!/
+            },
+            error => {
+                this.setState({
+                    content:
+                        (error.response &&
+                            error.response.data &&
+                            error.response.data.message) ||
+                        error.message ||
+                        error.toString()
+                });
+            }
+        );*/
     }
 
 
@@ -179,6 +265,10 @@ export default class BoardUser extends Component {
                             }}
                         />
                         <Statistic title="Balance" suffix={'₫'} ix="d" value={this.state.balance}/>
+                    </Row>
+                    <Row>
+                        <div style={{marginTop:20,fontWeight:'bold',fontSize:15}}>Transactions:</div>
+                        <Table style={{width:'100%',marginTop:10}} columns={this.columns} dataSource={this.state.transactions}  />
                     </Row>
                 </PageHeader>
 
