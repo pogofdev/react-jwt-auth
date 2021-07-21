@@ -2,6 +2,7 @@ import axios from 'axios';
 import authHeader from './auth-header';
 
 const API_URL = 'http://pogofdev.ooguy.com:8082/api/test/';
+// const API_URL = 'http://localhost:8082/api/test/';
 
 class UserService {
   getPublicContent() {
@@ -18,6 +19,13 @@ class UserService {
 
   getAdminBoard() {
     return axios.get(API_URL + 'admin', { headers: authHeader() });
+  }
+
+  async createNewTokens(amount) {
+      return await axios.post(API_URL + 'user/mint', {amount}, {headers: authHeader()});
+  }
+  async transferTokens(recipient,amount) {
+      return await axios.post(API_URL + 'user/transfer', {recipient,amount}, {headers: authHeader()});
   }
 }
 
