@@ -34,7 +34,7 @@ export default class BoardUser extends Component {
             recipient:'',
             totalSupply: 0,
             ticketType: undefined,
-            ticketQuantity:1,
+            ticketQuantity:0,
             transactions:[],
             balance: 0
         };
@@ -227,16 +227,16 @@ export default class BoardUser extends Component {
                 await this.myRef.current.validateFields()
                 let result = await UserService.buyTicket(this.state.ticketType,this.state.ticketQuantity)
                 console.log(`===>`,result)
-                /*if (result.data.success) {
-                    console.log('result.data.data', result.data.data)
+                if (result.data && result.data.length>=0) {
+                    // console.log('result.data.data', result.data.data)
                     this.setState({
-                        balance:result.data.data.fromUpdatedBalance,
+                        // balance:result.data.data.fromUpdatedBalance,
                         // ...result.data.data,
-                        modal2Visible: false
+                        modal3Visible: false
                     },async () => await this.loadTrans());
                 } else {
                     this.setState({
-                        modal2Visible: false
+                        modal3Visible: false
                     },()=>notification.error({
                         message: 'Error',
                         description:
@@ -245,7 +245,7 @@ export default class BoardUser extends Component {
                             console.log('Notification Clicked!');
                         },
                     }));
-                }*/
+                }
 
                 console.log('result.data', result.data)
             } catch (e) {
