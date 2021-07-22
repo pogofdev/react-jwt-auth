@@ -78,7 +78,7 @@ export default class BoardUser extends Component {
                 title: 'Transfer date',
                 dataIndex: 'timeStamp',
                 render: timeStamp => {
-                    return <div style={{textAlign:"right"}}>{ moment.unix(timeStamp/1000).format("DD/MM/YYYY HH:MM")}</div>
+                    return <div style={{textAlign:"right"}}>{ moment(parseInt(timeStamp)).format("DD/MM/YYYY HH:mm:ss")}</div>
                 },
             },
         ];
@@ -103,12 +103,8 @@ export default class BoardUser extends Component {
                 });
             }
         );
+        await this.loadTrans()
 
-        let transactions = await UserService.getUserTransactions(this.state.recipient, this.state.newAmount)
-        // console.log(`====>`, transactions)
-        this.setState({
-            transactions:transactions.data
-        })
 
         /*UserService.getUserTransactions().then(
             response => {
@@ -128,6 +124,13 @@ export default class BoardUser extends Component {
                 });
             }
         );*/
+    }
+    loadTrans = async () => {
+        let transactions = await UserService.getUserTransactions(this.state.recipient, this.state.newAmount)
+        // console.log(`====>`, transactions)
+        this.setState({
+            transactions: transactions.data
+        })
     }
 
 
@@ -158,7 +161,7 @@ export default class BoardUser extends Component {
                 this.setState({
                     ...result.data.data,
                     modal1Visible: false
-                });
+                },async () => await this.loadTrans());
             } else {
                 this.setState({
                     modal1Visible: false
@@ -183,7 +186,7 @@ export default class BoardUser extends Component {
                         balance:result.data.data.fromUpdatedBalance,
                         // ...result.data.data,
                         modal2Visible: false
-                    });
+                    },async () => await this.loadTrans());
                 } else {
                     this.setState({
                         modal2Visible: false
