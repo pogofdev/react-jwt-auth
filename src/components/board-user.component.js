@@ -1,24 +1,24 @@
 import React, {Component} from "react";
 import UserService from "../services/user.service";
-import {Button, Form, Input, InputNumber, Modal, notification, PageHeader, Row, Statistic, Table, Tag} from 'antd';
+import {
+    Button,
+    Form,
+    Input,
+    InputNumber,
+    Modal,
+    notification,
+    PageHeader,
+    Row,
+    Select,
+    Statistic,
+    Table,
+    Tag
+} from 'antd';
 import {ExclamationCircleOutlined} from '@ant-design/icons';
-import {currencyParser, format_Number_int, formatMoney, pointFormatter} from "../Utils";
+import {currencyParser, format_Number_int, formatMoney, numberFormater, pointFormatter} from "../Utils";
 import  * as moment from 'moment'
+const { Option } = Select;
 
-const data = [
-    {
-        amount: -1,
-        balance: 5,
-        description: "",
-        from: "poisongas",
-        fromUpdatedBalance: 5,
-        timeStamp: "1626870312345",
-        to: "integrate",
-        toUpdatedBalance: 10022,
-        transType: "TRANSFER_TOKENS"
-    },
-
-];
 
 export default class BoardUser extends Component {
 
@@ -29,9 +29,12 @@ export default class BoardUser extends Component {
             content: "",
             modal1Visible: false,
             modal2Visible: false,
+            modal3Visible: false,
             newAmount: 0,
             recipient:'',
             totalSupply: 0,
+            ticketType: undefined,
+            ticketQuantity:1,
             transactions:[],
             balance: 0
         };
@@ -141,10 +144,18 @@ export default class BoardUser extends Component {
     setModal2Visible(modal2Visible) {
         this.setState({modal2Visible});
     }
+    setModal3Visible(modal3Visible) {
+        this.setState({modal3Visible});
+    }
+
 
     onChange = (newAmount) => {
-        console.log(newAmount)
         this.setState({newAmount});
+    }
+
+    onChangeQuantity = (ticketQuantity) => {
+        console.log(ticketQuantity)
+        this.setState({ticketQuantity});
     }
 
     onRecipientChange = (recipient) => {
@@ -209,6 +220,42 @@ export default class BoardUser extends Component {
 
     }
 
+
+    handleOkBuyTicket = async () => {
+
+            try {
+                await this.myRef.current.validateFields()
+                let result = await UserService.buyTicket(this.state.ticketType,this.state.ticketQuantity)
+                console.log(`===>`,result)
+                /*if (result.data.success) {
+                    console.log('result.data.data', result.data.data)
+                    this.setState({
+                        balance:result.data.data.fromUpdatedBalance,
+                        // ...result.data.data,
+                        modal2Visible: false
+                    },async () => await this.loadTrans());
+                } else {
+                    this.setState({
+                        modal2Visible: false
+                    },()=>notification.error({
+                        message: 'Error',
+                        description:
+                            result.data.error,
+                        onClick: () => {
+                            console.log('Notification Clicked!');
+                        },
+                    }));
+                }*/
+
+                console.log('result.data', result.data)
+            } catch (e) {
+
+            }
+
+
+
+    }
+
     confirm = () => {
         Modal.confirm({
             title: 'Confirm',
@@ -230,12 +277,27 @@ export default class BoardUser extends Component {
         });
     }
 
+    confirmBuyTickets = () => {
+        Modal.confirm({
+            title: 'Confirm',
+            icon: <ExclamationCircleOutlined/>,
+            content: 'Are you sure?',
+            okText: 'OK',
+            cancelText: 'Cancel',
+            onOk: this.handleOkBuyTicket
+        });
+    }
+
     anyValidation = (rule, value, callback)=>{
         if (value <=0) {
             callback('Please enter value greater than 0');
         } else {
             callback();
         }
+    }
+
+    onChangeTicket=(ticketType)=> {
+        this.setState({ticketType})
     }
 
     render() {
@@ -247,7 +309,7 @@ export default class BoardUser extends Component {
                     tags={<Tag color="blue">Running</Tag>}
                     subTitle={`${this.state.roles}`}
                     extra={[
-                        <Button key="3">{`Buy Item`}</Button>,
+                        <Button key="3" onClick={() => this.setModal3Visible(true)}>{`Buy Item`}</Button>,
                         <Button key="2"  onClick={() => this.setModal2Visible(true)}>{`Transfer`}</Button>,
                         this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' &&
                         <Button key="1" type="primary" onClick={() => this.setModal1Visible(true)}>
@@ -363,6 +425,77 @@ export default class BoardUser extends Component {
                                 formatter={pointFormatter}
                                 parser={currencyParser}
                                 onChange={this.onChange}
+                            />
+                        </Form.Item>
+
+                    </Form>
+                </Modal>
+
+
+
+                <Modal
+                    title={`Buy tickets`}
+                    style={{top: '20%'}}
+                    visible={this.state.modal3Visible}
+                    onOk={this.confirmBuyTickets}
+                    onCancel={() => this.setModal3Visible(false)}
+                >
+                    <Form
+                        // labelCol={{span: 4}}
+                        // wrapperCol={{span: 14, offset: 0}}
+                        layout={'vertical'}
+                        ref={this.myRef}
+                    >
+                        <Form.Item label="Ticket"
+                                   name="Ticket"
+                                   rules={[
+                                       {
+                                           required: true,
+                                           message: 'Please a ticket to buy!',
+                                       }]}
+                        >
+                            <Select
+                                showSearch
+                                style={{ width: `100%` }}
+                                placeholder="Select a ticket to buy"
+                                optionFilterProp="children"
+                                onChange={this.onChangeTicket}
+                                // onFocus={onFocus}
+                                // onBlur={onBlur}
+                                // onSearch={onSearch}
+                                filterOption={(input, option) =>
+                                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                }
+                            >
+                                <Option value="OI93EX">Castrol GTX [SL 20W-50] 4L - 465 ₫</Option>
+                                <Option value="ZMGPBJ">Mobil Super 2000 [SP 10W-40] 4L - 900 ₫</Option>
+                                <Option value="QW5ZGQ">Mobil Super Motor Synthetic [SL 10W-40, MA2] 0.8L - 140 ₫</Option>
+                            </Select>
+                        </Form.Item>
+                        <Form.Item label="Quantity" name="quantity"
+                                   rules={[
+                                       {
+                                           required: true,
+                                           message: 'Please enter quantity',
+                                       },
+                                       {
+                                           validator: async (_, names) => {
+                                               if (!names || parseInt(names) <= 0) {
+                                                   return Promise.reject(new Error('Please enter value greater than 0'));
+                                               }
+                                           },
+                                       },
+                                   ]}
+                        >
+                            <InputNumber
+
+                                defaultValue={this.state.ticketQuantity}
+                                // defaultValue={1}
+                                style={{width: `50%`}}
+                                step={1}
+                                formatter={numberFormater}
+                                parser={currencyParser}
+                                onChange={this.onChangeQuantity}
                             />
                         </Form.Item>
 

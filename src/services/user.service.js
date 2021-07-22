@@ -28,6 +28,10 @@ class UserService {
       return await axios.post(API_URL + 'user/transfer', {recipient,amount}, {headers: authHeader()});
   }
 
+  async buyTicket(ticketType,quantity) {
+      return await axios.post(API_URL + 'user/buy', {ticketType,quantity}, {headers: authHeader()});
+  }
+
   async getUserTransactions() {
       return await axios.post(API_URL + 'user/transactions', {}, {headers: authHeader()});
   }

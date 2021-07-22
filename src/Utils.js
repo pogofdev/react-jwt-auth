@@ -71,6 +71,15 @@ export const pointFormatter = value => {
     });
 };
 
+export const numberFormater = value => {
+    return accounting.formatMoney(value, {
+        symbol: '',
+        thousand: '.',
+        format: '%v%s',
+        precision: 0
+    });
+};
+
 
 
 export const currencyParser = val => {
