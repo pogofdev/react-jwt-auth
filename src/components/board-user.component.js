@@ -12,13 +12,23 @@ import {
     Select,
     Statistic,
     Table,
+    Tabs,
     Tag
 } from 'antd';
 import {ExclamationCircleOutlined} from '@ant-design/icons';
-import {currencyParser, format_Number_int, formatMoney, numberFormater, pointFormatter} from "../Utils";
-import  * as moment from 'moment'
-const { Option } = Select;
+import {currencyParser, format_Number_int, numberFormater, pointFormatter} from "../Utils";
+import * as moment from 'moment'
 
+const {Option} = Select;
+const {TabPane} = Tabs;
+
+
+const TICKETS = {
+    OI93EX: "Castrol GTX [SL 20W-50] 4L",
+    ZMGPBJ: "Mobil Super 2000 [SP 10W-40] 4L",
+    QW5ZGQ: "Mobil Super Motor Synthetic [SL 10W-40, MA2] 0.8L",
+
+}
 
 export default class BoardUser extends Component {
 
@@ -31,11 +41,14 @@ export default class BoardUser extends Component {
             modal2Visible: false,
             modal3Visible: false,
             newAmount: 0,
-            recipient:'',
+            recipient: '',
             totalSupply: 0,
             ticketType: undefined,
-            ticketQuantity:0,
-            transactions:[],
+            ticketQuantity: 0,
+            transactions: [],
+            tickets: [],
+            selectedRowKeys: [],
+            ownedItems: 0,
             balance: 0
         };
         this.myRef = React.createRef();
@@ -46,67 +59,95 @@ export default class BoardUser extends Component {
                 title: 'From',
                 dataIndex: 'from',
                 render: from => {
-                    return <div style={{textAlign:"left"}}>{from}</div>
+                    return <div style={{textAlign: "left"}}>{from}</div>
                 },
             },
             {
                 title: 'To',
                 dataIndex: 'to',
                 render: to => {
-                    return <div style={{textAlign:"left"}}>{to}</div>
+                    return <div style={{textAlign: "left"}}>{to}</div>
                 },
             },
             {
                 title: 'Amount',
                 dataIndex: 'amount',
                 render: amount => {
-                    return <div style={{textAlign:"right"}}>{format_Number_int(amount)}</div>
+                    return <div style={{textAlign: "right"}}>{format_Number_int(amount)}</div>
                 },
             },
             {
                 title: 'Trans Type',
                 dataIndex: 'transType',
                 render: transType => {
-                    return <div style={{textAlign:"right"}}>{(transType)}</div>
+                    return <div style={{textAlign: "right"}}>{(transType)}</div>
                 },
             },
             {
                 title: 'Balance after transaction',
                 dataIndex: 'balance',
                 render: balance => {
-                    return <div style={{textAlign:"right"}}>{format_Number_int(balance)}</div>
+                    return <div style={{textAlign: "right"}}>{format_Number_int(balance)}</div>
                 },
             },
             {
                 title: 'Transfer date',
                 dataIndex: 'timeStamp',
                 render: timeStamp => {
-                    return <div style={{textAlign:"right"}}>{ moment(parseInt(timeStamp)).format("DD/MM/YYYY HH:mm:ss")}</div>
+                    return <div
+                        style={{textAlign: "right"}}>{moment(parseInt(timeStamp)).format("DD/MM/YYYY HH:mm:ss")}</div>
+                },
+            },
+        ];
+        this.columns2 = [
+            {
+
+                title: 'Ticket',
+                dataIndex: 'ticketType',
+                render: ticketType => {
+                    return <div style={{textAlign: "left"}}>{TICKETS[ticketType]}</div>
+                },
+            },
+            {
+                title: 'Price',
+                dataIndex: 'price',
+                render: price => {
+                    return <div style={{textAlign: "left"}}>{format_Number_int(price)}</div>
+                },
+            },
+            {
+                title: 'Purchase time ',
+                dataIndex: 'buyDateTime',
+                render: buyDateTime => {
+                    return <div
+                        style={{textAlign: "right"}}>{moment(parseInt(buyDateTime)).format("DD/MM/YYYY HH:mm:ss")}</div>
                 },
             },
         ];
     }
 
     async componentDidMount() {
-        UserService.getUserBoard().then(
-            response => {
+        /* UserService.getUserBoard().then(
+             response => {
 
-                this.setState({
-                    ...response.data,
-                });
-            },
-            error => {
-                this.setState({
-                    content:
-                        (error.response &&
-                            error.response.data &&
-                            error.response.data.message) ||
-                        error.message ||
-                        error.toString()
-                });
-            }
-        );
+                 this.setState({
+                     ...response.data,
+                 });
+             },
+             error => {
+                 this.setState({
+                     content:
+                         (error.response &&
+                             error.response.data &&
+                             error.response.data.message) ||
+                         error.message ||
+                         error.toString()
+                 });
+             }
+         );*/
+        await this.loadBalance()
         await this.loadTrans()
+        await this.loadTickets()
 
 
         /*UserService.getUserTransactions().then(
@@ -128,11 +169,34 @@ export default class BoardUser extends Component {
             }
         );*/
     }
+
+    loadBalance = async () => {
+        let transactions = await UserService.getUserBoard()
+        console.log(`====>`, transactions)
+        // debugger
+        this.setState({
+            ...transactions.data,
+        })
+    }
+
     loadTrans = async () => {
-        let transactions = await UserService.getUserTransactions(this.state.recipient, this.state.newAmount)
-        // console.log(`====>`, transactions)
+        let transactions = await UserService.getUserTransactions()
+        console.log(`====>`, transactions)
+        // debugger
         this.setState({
             transactions: transactions.data
+        })
+    }
+
+    loadTickets = async () => {
+        let transactions = await UserService.getOwnerTickets()
+        // console.log(`====>`, transactions)
+        this.setState({
+            tickets: transactions.data.map((item) => {
+                item.key = item.ticketNumber;
+                return item
+            }),
+            ownedItems: transactions.data.length
         })
     }
 
@@ -144,6 +208,7 @@ export default class BoardUser extends Component {
     setModal2Visible(modal2Visible) {
         this.setState({modal2Visible});
     }
+
     setModal3Visible(modal3Visible) {
         this.setState({modal3Visible});
     }
@@ -159,12 +224,12 @@ export default class BoardUser extends Component {
     }
 
     onRecipientChange = (recipient) => {
-        this.setState({recipient:recipient.target.value});
+        this.setState({recipient: recipient.target.value});
     }
 
     handleOk = async () => {
         try {
-            console.log('===>',await this.myRef1.current.validateFields())
+            console.log('===>', await this.myRef1.current.validateFields())
             let result = await UserService.createNewTokens(this.state.newAmount)
 
             if (result.data.success) {
@@ -172,7 +237,7 @@ export default class BoardUser extends Component {
                 this.setState({
                     ...result.data.data,
                     modal1Visible: false
-                },async () => await this.loadTrans());
+                }, async () => await this.loadTrans());
             } else {
                 this.setState({
                     modal1Visible: false
@@ -187,35 +252,34 @@ export default class BoardUser extends Component {
 
     handleOkTransfer = async () => {
 
-            try {
-                console.log('===>',await this.myRef.current.validateFields())
-                let result = await UserService.transferTokens(this.state.recipient,this.state.newAmount)
+        try {
+            console.log('===>', await this.myRef.current.validateFields())
+            let result = await UserService.transferTokens(this.state.recipient, this.state.newAmount)
 
-                if (result.data.success) {
-                    console.log('result.data.data', result.data.data)
-                    this.setState({
-                        balance:result.data.data.fromUpdatedBalance,
-                        // ...result.data.data,
-                        modal2Visible: false
-                    },async () => await this.loadTrans());
-                } else {
-                    this.setState({
-                        modal2Visible: false
-                    },()=>notification.error({
-                        message: 'Error',
-                        description:
-                            result.data.error,
-                        onClick: () => {
-                            console.log('Notification Clicked!');
-                        },
-                    }));
-                }
-
-                console.log('result.data', result.data)
-            } catch (e) {
-
+            if (result.data.success) {
+                console.log('result.data.data', result.data.data)
+                this.setState({
+                    balance: result.data.data.fromUpdatedBalance,
+                    // ...result.data.data,
+                    modal2Visible: false
+                }, async () => await this.loadTrans());
+            } else {
+                this.setState({
+                    modal2Visible: false
+                }, () => notification.error({
+                    message: 'Error',
+                    description:
+                    result.data.error,
+                    onClick: () => {
+                        console.log('Notification Clicked!');
+                    },
+                }));
             }
 
+            console.log('result.data', result.data)
+        } catch (e) {
+
+        }
 
 
     }
@@ -223,35 +287,39 @@ export default class BoardUser extends Component {
 
     handleOkBuyTicket = async () => {
 
-            try {
-                await this.myRef.current.validateFields()
-                let result = await UserService.buyTicket(this.state.ticketType,this.state.ticketQuantity)
-                console.log(`===>`,result)
-                if (result.data && result.data.length>=0) {
-                    // console.log('result.data.data', result.data.data)
-                    this.setState({
-                        // balance:result.data.data.fromUpdatedBalance,
-                        // ...result.data.data,
-                        modal3Visible: false
-                    },async () => await this.loadTrans());
-                } else {
-                    this.setState({
-                        modal3Visible: false
-                    },()=>notification.error({
-                        message: 'Error',
-                        description:
-                            result.data.error,
-                        onClick: () => {
-                            console.log('Notification Clicked!');
-                        },
-                    }));
-                }
+        try {
+            await this.myRef.current.validateFields()
+            let result = await UserService.buyTicket(this.state.ticketType, this.state.ticketQuantity)
+            console.log(`===>`, result)
+            if (result.data && result.data.length >= 0) {
+                // console.log('result.data.data', result.data.data)
+                this.setState({
+                    // balance:result.data.data.fromUpdatedBalance,
+                    // ...result.data.data,
+                    modal3Visible: false
+                }, async () => {
+                    this.loadTrans();
+                    this.loadTickets();
+                    this.loadBalance();
 
-                console.log('result.data', result.data)
-            } catch (e) {
-
+                });
+            } else {
+                this.setState({
+                    modal3Visible: false
+                }, () => notification.error({
+                    message: 'Error',
+                    description:
+                    result.data.error,
+                    onClick: () => {
+                        console.log('Notification Clicked!');
+                    },
+                }));
             }
 
+            console.log('result.data', result.data)
+        } catch (e) {
+
+        }
 
 
     }
@@ -288,19 +356,29 @@ export default class BoardUser extends Component {
         });
     }
 
-    anyValidation = (rule, value, callback)=>{
-        if (value <=0) {
+    anyValidation = (rule, value, callback) => {
+        if (value <= 0) {
             callback('Please enter value greater than 0');
         } else {
             callback();
         }
     }
 
-    onChangeTicket=(ticketType)=> {
+    onChangeTicket = (ticketType) => {
         this.setState({ticketType})
     }
+    onSelectChange = selectedRowKeys => {
+        console.log('selectedRowKeys changed: ', selectedRowKeys);
+        this.setState({selectedRowKeys});
+    };
 
     render() {
+        const {loading, selectedRowKeys} = this.state;
+        const rowSelection = {
+            selectedRowKeys,
+            onChange: this.onSelectChange,
+        };
+        const hasSelected = selectedRowKeys.length > 0;
         return (
             <div className="container">
                 <PageHeader
@@ -309,8 +387,10 @@ export default class BoardUser extends Component {
                     tags={<Tag color="blue">Running</Tag>}
                     subTitle={`${this.state.roles}`}
                     extra={[
+                        this.state.roles && this.state.roles.length > 0 && this.state.roles[0] !== 'INTEGRATE' &&
                         <Button key="3" onClick={() => this.setModal3Visible(true)}>{`Buy Item`}</Button>,
-                        <Button key="2"  onClick={() => this.setModal2Visible(true)}>{`Transfer`}</Button>,
+
+                        <Button key="2" onClick={() => this.setModal2Visible(true)}>{`Transfer`}</Button>,
                         this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' &&
                         <Button key="1" type="primary" onClick={() => this.setModal1Visible(true)}>
                             {`Create new ₫`}
@@ -332,8 +412,28 @@ export default class BoardUser extends Component {
                         <Statistic title="Balance" suffix={'₫'} ix="d" value={this.state.balance}/>
                     </Row>
                     <Row>
-                        <div style={{marginTop:20,fontWeight:'bold',fontSize:15}}>Transactions:</div>
-                        <Table style={{width:'100%',marginTop:10}} columns={this.columns} dataSource={this.state.transactions}  />
+                        <Tabs type="card" style={{width: `100%`, marginTop: 20}}>
+                            <TabPane tab="Transactions" key="1">
+                                {/*<div style={{marginTop:20,fontWeight:'bold',fontSize:15}}>Transactions:</div>*/}
+                                <Table style={{width: '100%', marginTop: 10}} columns={this.columns}
+                                       dataSource={this.state.transactions}/>
+                            </TabPane>
+                            <TabPane tab="Tickets" key="2">
+                                <div style={{marginBottom: 16, width: `100%`}}>
+                                    <Button type="primary" onClick={this.start} disabled={!hasSelected}
+                                            loading={loading}>
+                                        Use tickets at OD shop
+                                    </Button>
+                                    <span style={{marginLeft: 8}}>
+                                        {hasSelected ? `Selected ${selectedRowKeys.length} tickets` : ''}
+                                      </span>
+                                    <Table rowSelection={rowSelection} style={{width: '100%', marginTop: 10}}
+                                           columns={this.columns2} dataSource={this.state.tickets}/>
+                                </div>
+                            </TabPane>
+
+                        </Tabs>
+
                     </Row>
                 </PageHeader>
 
@@ -432,7 +532,6 @@ export default class BoardUser extends Component {
                 </Modal>
 
 
-
                 <Modal
                     title={`Buy tickets`}
                     style={{top: '20%'}}
@@ -456,7 +555,7 @@ export default class BoardUser extends Component {
                         >
                             <Select
                                 showSearch
-                                style={{ width: `100%` }}
+                                style={{width: `100%`}}
                                 placeholder="Select a ticket to buy"
                                 optionFilterProp="children"
                                 onChange={this.onChangeTicket}
@@ -469,7 +568,8 @@ export default class BoardUser extends Component {
                             >
                                 <Option value="OI93EX">Castrol GTX [SL 20W-50] 4L - 465 ₫</Option>
                                 <Option value="ZMGPBJ">Mobil Super 2000 [SP 10W-40] 4L - 900 ₫</Option>
-                                <Option value="QW5ZGQ">Mobil Super Motor Synthetic [SL 10W-40, MA2] 0.8L - 140 ₫</Option>
+                                <Option value="QW5ZGQ">Mobil Super Motor Synthetic [SL 10W-40, MA2] 0.8L - 140
+                                    ₫</Option>
                             </Select>
                         </Form.Item>
                         <Form.Item label="Quantity" name="quantity"

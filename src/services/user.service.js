@@ -35,6 +35,10 @@ class UserService {
   async getUserTransactions() {
       return await axios.post(API_URL + 'user/transactions', {}, {headers: authHeader()});
   }
+
+  async getOwnerTickets() {
+      return await axios.post(API_URL + 'user/getOwnerTickets', {}, {headers: authHeader()});
+  }
 }
 
 export default new UserService();
