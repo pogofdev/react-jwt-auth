@@ -102,6 +102,14 @@ export default class BoardUser extends Component {
         this.columns2 = [
             {
 
+                title: 'Ticket Number',
+                dataIndex: 'ticketNumber',
+                render: ticketNumber => {
+                    return <div style={{textAlign: "left"}}>{ticketNumber.substring((ticketNumber.indexOf('-')+1),ticketNumber.length)}</div>
+                },
+            },
+            {
+
                 title: 'Ticket',
                 dataIndex: 'ticketType',
                 render: ticketType => {
@@ -121,6 +129,65 @@ export default class BoardUser extends Component {
                 render: buyDateTime => {
                     return <div
                         style={{textAlign: "right"}}>{moment(parseInt(buyDateTime)).format("DD/MM/YYYY HH:mm:ss")}</div>
+                },
+            },
+        ];
+        this.columns3 = [
+
+            {
+
+                title: 'Ticket Number',
+                dataIndex: 'ticketNumber',
+                render: ticketNumber => {
+                    return <div style={{textAlign: "left"}}>{ticketNumber.substring((ticketNumber.indexOf('-')+1),ticketNumber.length)}</div>
+                },
+            },
+            {
+
+                title: 'Ticket',
+                dataIndex: 'ticketType',
+                render: ticketType => {
+                    return <div style={{textAlign: "left"}}>{TICKETS[ticketType]}</div>
+                },
+            },
+            {
+                title: 'Price',
+                dataIndex: 'price',
+                render: price => {
+                    return <div style={{textAlign: "left"}}>{format_Number_int(price)}</div>
+                },
+            },
+
+            {
+
+                title: 'Buyer',
+                dataIndex: 'buyer',
+                render: buyer => {
+                    return <div style={{textAlign: "left"}}>{buyer}</div>
+                },
+            },
+            {
+
+                title: 'Owner',
+                dataIndex: 'owner',
+                render: buyer => {
+                    return <div style={{textAlign: "left"}}>{buyer}</div>
+                },
+            },
+            {
+                title: 'Purchase time ',
+                dataIndex: 'buyDateTime',
+                render: buyDateTime => {
+                    return <div
+                        style={{textAlign: "right"}}>{moment(parseInt(buyDateTime)).format("DD/MM/YYYY HH:mm:ss")}</div>
+                },
+            },
+            {
+
+                title: 'Status',
+                dataIndex: 'status',
+                render: status => {
+                    return <div style={{textAlign: "left"}}>{status}</div>
                 },
             },
         ];
@@ -324,6 +391,45 @@ export default class BoardUser extends Component {
 
     }
 
+    handleOkUseTicket = async () => {
+
+        try {
+            // await this.myRef.current.validateFields()
+            let result = await UserService.useTicket(this.state.selectedRowKeys)
+            console.log(`===>`, result)
+            if (result.data && result.data.success) {
+                // console.log('result.data.data', result.data.data)
+                this.setState({
+                    // balance:result.data.data.fromUpdatedBalance,
+                    // ...result.data.data,
+                    modal3Visible: false
+                }, async () => {
+                    // this.loadTrans();
+                    this.loadTickets();
+                    // this.loadBalance();
+
+                });
+            } else {
+                this.setState({
+                    modal3Visible: false
+                }, () => notification.error({
+                    message: 'Error',
+                    description:
+                    result.data.error,
+                    onClick: () => {
+                        console.log('Notification Clicked!');
+                    },
+                }));
+            }
+
+            console.log('result.data', result.data)
+        } catch (e) {
+
+        }
+
+
+    }
+
     confirm = () => {
         Modal.confirm({
             title: 'Confirm',
@@ -353,6 +459,17 @@ export default class BoardUser extends Component {
             okText: 'OK',
             cancelText: 'Cancel',
             onOk: this.handleOkBuyTicket
+        });
+    }
+
+    confirmUseTickets = () => {
+        Modal.confirm({
+            title: 'Confirm',
+            icon: <ExclamationCircleOutlined/>,
+            content: 'Are you sure?',
+            okText: 'OK',
+            cancelText: 'Cancel',
+            onOk: this.handleOkUseTicket
         });
     }
 
@@ -402,7 +519,7 @@ export default class BoardUser extends Component {
                         {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' &&
                         <Statistic title="Total Supply" suffix={'₫'} value={this.state.totalSupply}/>}
                         <Statistic
-                            title="Owned Items"
+                            title={this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' ? 'Not Yet Redeemed Tickets' :'Owned Tickets'}
                             prefix=""
                             value={this.state.ownedItems}
                             style={{
@@ -418,9 +535,23 @@ export default class BoardUser extends Component {
                                 <Table style={{width: '100%', marginTop: 10}} columns={this.columns}
                                        dataSource={this.state.transactions}/>
                             </TabPane>
-                            <TabPane tab="Tickets" key="2">
+                            { this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' ?<TabPane tab="Not yet redeemed tickets" key="2">
                                 <div style={{marginBottom: 16, width: `100%`}}>
-                                    <Button type="primary" onClick={this.start} disabled={!hasSelected}
+                                    {/*<Button type="primary" onClick={this.start} disabled={!hasSelected}
+                                            loading={loading}>
+                                        Use tickets at OD shop
+                                    </Button>
+                                    <span style={{marginLeft: 8}}>
+                                        {hasSelected ? `Selected ${selectedRowKeys.length} tickets` : ''}
+                                      </span>*/}
+                                    <Table
+                                      // rowSelection={rowSelection}
+                                           style={{width: '100%', marginTop: 10}}
+                                           columns={this.columns3} dataSource={this.state.tickets}/>
+                                </div>
+                            </TabPane>:<TabPane tab="Tickets" key="2">
+                                <div style={{marginBottom: 16, width: `100%`}}>
+                                    <Button type="primary" onClick={this.confirmUseTickets} disabled={!hasSelected}
                                             loading={loading}>
                                         Use tickets at OD shop
                                     </Button>
@@ -430,7 +561,9 @@ export default class BoardUser extends Component {
                                     <Table rowSelection={rowSelection} style={{width: '100%', marginTop: 10}}
                                            columns={this.columns2} dataSource={this.state.tickets}/>
                                 </div>
-                            </TabPane>
+                            </TabPane>}
+
+
 
                         </Tabs>
 
