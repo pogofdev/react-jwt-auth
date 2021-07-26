@@ -47,6 +47,7 @@ export default class BoardUser extends Component {
             ticketQuantity: 0,
             transactions: [],
             tickets: [],
+            redeemTickets: [],
             selectedRowKeys: [],
             ownedItems: 0,
             balance: 0
@@ -84,10 +85,17 @@ export default class BoardUser extends Component {
                 },
             },
             {
-                title: 'Balance after transaction',
+                title: 'Balance',
                 dataIndex: 'balance',
                 render: balance => {
                     return <div style={{textAlign: "right"}}>{format_Number_int(balance)}</div>
+                },
+            },
+            {
+                title: 'Description',
+                dataIndex: 'description',
+                render: description => {
+                    return <div style={{textAlign: "left"}}>{(description)}</div>
                 },
             },
             {
@@ -105,7 +113,8 @@ export default class BoardUser extends Component {
                 title: 'Ticket Number',
                 dataIndex: 'ticketNumber',
                 render: ticketNumber => {
-                    return <div style={{textAlign: "left"}}>{ticketNumber.substring((ticketNumber.indexOf('-')+1),ticketNumber.length)}</div>
+                    return <div
+                        style={{textAlign: "left"}}>{ticketNumber.substring((ticketNumber.indexOf('-') + 1), ticketNumber.length)}</div>
                 },
             },
             {
@@ -132,6 +141,57 @@ export default class BoardUser extends Component {
                 },
             },
         ];
+
+        this.columns4 = [
+            {
+
+                title: 'Ticket Number',
+                dataIndex: 'ticketNumber',
+                render: ticketNumber => {
+                    return <div
+                        style={{textAlign: "left"}}>{ticketNumber.substring((ticketNumber.indexOf('-') + 1), ticketNumber.length)}</div>
+                },
+            },
+            {
+
+                title: 'Ticket',
+                dataIndex: 'ticketType',
+                render: ticketType => {
+                    return <div style={{textAlign: "left"}}>{TICKETS[ticketType]}</div>
+                },
+            },
+            {
+
+                title: 'Buyer',
+                dataIndex: 'buyer',
+                render: buyer => {
+                    return <div style={{textAlign: "left"}}>{buyer}</div>
+                },
+            },
+            {
+                title: 'Price',
+                dataIndex: 'price',
+                render: price => {
+                    return <div style={{textAlign: "left"}}>{format_Number_int(price)}</div>
+                },
+            },
+          /*  {
+                title: 'Purchase time ',
+                dataIndex: 'buyDateTime',
+                render: buyDateTime => {
+                    return <div
+                        style={{textAlign: "right"}}>{moment(parseInt(buyDateTime)).format("DD/MM/YYYY HH:mm:ss")}</div>
+                },
+            },*/
+            {
+                title: 'Used time ',
+                dataIndex: 'useDateTime',
+                render: useDateTime => {
+                    return <div
+                        style={{textAlign: "right"}}>{moment(parseInt(useDateTime)).format("DD/MM/YYYY HH:mm:ss")}</div>
+                },
+            },
+        ];
         this.columns3 = [
 
             {
@@ -139,7 +199,8 @@ export default class BoardUser extends Component {
                 title: 'Ticket Number',
                 dataIndex: 'ticketNumber',
                 render: ticketNumber => {
-                    return <div style={{textAlign: "left"}}>{ticketNumber.substring((ticketNumber.indexOf('-')+1),ticketNumber.length)}</div>
+                    return <div
+                        style={{textAlign: "left"}}>{ticketNumber.substring((ticketNumber.indexOf('-') + 1), ticketNumber.length)}</div>
                 },
             },
             {
@@ -191,50 +252,70 @@ export default class BoardUser extends Component {
                 },
             },
         ];
+
+        this.columns5 = [
+
+            {
+
+                title: 'Ticket Number',
+                dataIndex: 'ticketNumber',
+                render: ticketNumber => {
+                    return <div
+                        style={{textAlign: "left"}}>{ticketNumber.substring((ticketNumber.indexOf('-') + 1), ticketNumber.length)}</div>
+                },
+            },
+            {
+
+                title: 'Ticket',
+                dataIndex: 'ticketType',
+                render: ticketType => {
+                    return <div style={{textAlign: "left"}}>{TICKETS[ticketType]}</div>
+                },
+            },
+            {
+                title: 'Price',
+                dataIndex: 'price',
+                render: price => {
+                    return <div style={{textAlign: "left"}}>{format_Number_int(price)}</div>
+                },
+            },
+
+            {
+
+                title: 'Owner',
+                dataIndex: 'owner',
+                render: owner => {
+                    return <div style={{textAlign: "left"}}>{owner}</div>
+                },
+            },
+
+            {
+                title: 'Redeem time ',
+                dataIndex: 'redeemDateTime',
+                render: redeemDateTime => {
+                    return <div
+                        style={{textAlign: "right"}}>{moment(parseInt(redeemDateTime)).format("DD/MM/YYYY HH:mm:ss")}</div>
+                },
+            },
+            {
+
+                title: 'Status',
+                dataIndex: 'status',
+                render: status => {
+                    return <div style={{textAlign: "left"}}>{status}</div>
+                },
+            },
+        ];
     }
 
     async componentDidMount() {
-        /* UserService.getUserBoard().then(
-             response => {
 
-                 this.setState({
-                     ...response.data,
-                 });
-             },
-             error => {
-                 this.setState({
-                     content:
-                         (error.response &&
-                             error.response.data &&
-                             error.response.data.message) ||
-                         error.message ||
-                         error.toString()
-                 });
-             }
-         );*/
-        await this.loadBalance()
-        await this.loadTrans()
-        await this.loadTickets()
+         this.loadBalance()
+         this.loadTrans()
+         this.loadTickets()
+         this.loadRedeemTickets()
 
 
-        /*UserService.getUserTransactions().then(
-            response => {
-                console.log(`====>`, response)
-                /!* this.setState({
-                     ...response.data,
-                 });*!/
-            },
-            error => {
-                this.setState({
-                    content:
-                        (error.response &&
-                            error.response.data &&
-                            error.response.data.message) ||
-                        error.message ||
-                        error.toString()
-                });
-            }
-        );*/
     }
 
     loadBalance = async () => {
@@ -264,6 +345,17 @@ export default class BoardUser extends Component {
                 return item
             }),
             ownedItems: transactions.data.length
+        })
+    }
+    loadRedeemTickets = async () => {
+        let transactions = await UserService.getRedeemTickets()
+        // console.log(`====>`, transactions)
+        this.setState({
+            redeemTickets: transactions.data.map((item) => {
+                item.key = item.ticketNumber;
+                return item
+            }),
+            // ownedItems: transactions.data.length
         })
     }
 
@@ -404,9 +496,9 @@ export default class BoardUser extends Component {
                     // ...result.data.data,
                     modal3Visible: false
                 }, async () => {
-                    // this.loadTrans();
+                    this.loadTrans();
                     this.loadTickets();
-                    // this.loadBalance();
+                    this.loadBalance();
 
                 });
             } else {
@@ -519,7 +611,7 @@ export default class BoardUser extends Component {
                         {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' &&
                         <Statistic title="Total Supply" suffix={'₫'} value={this.state.totalSupply}/>}
                         <Statistic
-                            title={this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' ? 'Not Yet Redeemed Tickets' :'Owned Tickets'}
+                            title={this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' ? 'Not Yet Redeemed Tickets' : 'Owned Tickets'}
                             prefix=""
                             value={this.state.ownedItems}
                             style={{
@@ -535,34 +627,48 @@ export default class BoardUser extends Component {
                                 <Table style={{width: '100%', marginTop: 10}} columns={this.columns}
                                        dataSource={this.state.transactions}/>
                             </TabPane>
-                            { this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' ?<TabPane tab="Not yet redeemed tickets" key="2">
-                                <div style={{marginBottom: 16, width: `100%`}}>
-                                    {/*<Button type="primary" onClick={this.start} disabled={!hasSelected}
+                            {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'INTEGRATE' ?
+                                <><TabPane tab="Not yet redeemed tickets" key="2">
+                                    <div style={{marginBottom: 16, width: `100%`}}>
+                                        {/*<Button type="primary" onClick={this.start} disabled={!hasSelected}
                                             loading={loading}>
                                         Use tickets at OD shop
                                     </Button>
                                     <span style={{marginLeft: 8}}>
                                         {hasSelected ? `Selected ${selectedRowKeys.length} tickets` : ''}
                                       </span>*/}
-                                    <Table
-                                      // rowSelection={rowSelection}
-                                           style={{width: '100%', marginTop: 10}}
-                                           columns={this.columns3} dataSource={this.state.tickets}/>
-                                </div>
-                            </TabPane>:<TabPane tab="Tickets" key="2">
-                                <div style={{marginBottom: 16, width: `100%`}}>
-                                    <Button type="primary" onClick={this.confirmUseTickets} disabled={!hasSelected}
-                                            loading={loading}>
-                                        Use tickets at OD shop
-                                    </Button>
-                                    <span style={{marginLeft: 8}}>
+                                        <Table
+                                            // rowSelection={rowSelection}
+                                            style={{width: '100%', marginTop: 10}}
+                                            columns={this.columns3} dataSource={this.state.tickets}/>
+                                    </div>
+                                </TabPane>
+                                    <TabPane tab="Redeemed tickets" key="3">
+                                        <div style={{marginBottom: 16, width: `100%`}}>
+                                            <Table
+                                                // rowSelection={rowSelection}
+                                                style={{width: '100%', marginTop: 10}}
+                                                columns={this.columns5} dataSource={this.state.redeemTickets}/>
+                                        </div>
+                                    </TabPane>
+                                </> : <TabPane tab="Tickets" key="2">
+                                    <div style={{marginBottom: 16, width: `100%`}}>
+                                        <Button type="primary" onClick={this.confirmUseTickets} disabled={!hasSelected}
+                                                loading={loading}>
+                                            {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'OILDEPOT' ?
+                                                `Redeem tickets at Integrate for Tokens`:`Use tickets at OD shop`}
+                                        </Button>
+                                        <span style={{marginLeft: 8}}>
                                         {hasSelected ? `Selected ${selectedRowKeys.length} tickets` : ''}
                                       </span>
-                                    <Table rowSelection={rowSelection} style={{width: '100%', marginTop: 10}}
-                                           columns={this.columns2} dataSource={this.state.tickets}/>
-                                </div>
-                            </TabPane>}
+                                        {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'OILDEPOT' ?
+                                            (<Table rowSelection={rowSelection} style={{width: '100%', marginTop: 10}}
+                                                    columns={this.columns4} dataSource={this.state.tickets}/>) :
+                                            (<Table rowSelection={rowSelection} style={{width: '100%', marginTop: 10}}
+                                                    columns={this.columns2} dataSource={this.state.tickets}/>)}
 
+                                    </div>
+                                </TabPane>}
 
 
                         </Tabs>
@@ -699,9 +805,9 @@ export default class BoardUser extends Component {
                                     option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                                 }
                             >
-                                <Option value="OI93EX">Castrol GTX [SL 20W-50] 4L - 465 ₫</Option>
-                                <Option value="ZMGPBJ">Mobil Super 2000 [SP 10W-40] 4L - 900 ₫</Option>
-                                <Option value="QW5ZGQ">Mobil Super Motor Synthetic [SL 10W-40, MA2] 0.8L - 140
+                                <Option value="OI93EX">Castrol GTX [SL 20W-50] 4L - 465.000 ₫</Option>
+                                <Option value="ZMGPBJ">Mobil Super 2000 [SP 10W-40] 4L - 900.000 ₫</Option>
+                                <Option value="QW5ZGQ">Mobil Super Motor Synthetic [SL 10W-40, MA2] 0.8L - 140.000
                                     ₫</Option>
                             </Select>
                         </Form.Item>
