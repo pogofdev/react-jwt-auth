@@ -655,13 +655,13 @@ export default class BoardUser extends Component {
                                     <div style={{marginBottom: 16, width: `100%`}}>
                                         <Button type="primary" onClick={this.confirmUseTickets} disabled={!hasSelected}
                                                 loading={loading}>
-                                            {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'OILDEPOT' ?
+                                            {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'OIL_DEPOT_SHOP' ?
                                                 `Redeem tickets at Integrate for Tokens`:`Use tickets at OD shop`}
                                         </Button>
                                         <span style={{marginLeft: 8}}>
                                         {hasSelected ? `Selected ${selectedRowKeys.length} tickets` : ''}
                                       </span>
-                                        {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'OILDEPOT' ?
+                                        {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'OIL_DEPOT_SHOP' ?
                                             (<Table rowSelection={rowSelection} style={{width: '100%', marginTop: 10}}
                                                     columns={this.columns4} dataSource={this.state.tickets}/>) :
                                             (<Table rowSelection={rowSelection} style={{width: '100%', marginTop: 10}}

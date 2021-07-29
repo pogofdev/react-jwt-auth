@@ -4,7 +4,10 @@ import Input from "react-validation/build/input";
 import CheckButton from "react-validation/build/button";
 import { isEmail } from "validator";
 
+
 import AuthService from "../services/auth.service";
+import {Select} from "antd";
+const {Option} = Select;
 
 const required = value => {
   if (!value) {
@@ -59,7 +62,9 @@ export default class Register extends Component {
       email: "",
       password: "",
       successful: false,
-      message: ""
+      message: "",
+        role:'user'
+
     };
   }
 
@@ -81,6 +86,10 @@ export default class Register extends Component {
     });
   }
 
+    onChangeRole = (role) => {
+        this.setState({role})
+    }
+
   handleRegister(e) {
     e.preventDefault();
 
@@ -95,7 +104,8 @@ export default class Register extends Component {
       AuthService.register(
         this.state.username,
         this.state.email,
-        this.state.password
+        this.state.password,
+        this.state.role,
       ).then(
         response => {
           this.setState({
@@ -173,6 +183,28 @@ export default class Register extends Component {
                     validations={[required, vpassword]}
                   />
                 </div>
+                  <div className="form-group">
+                      <label htmlFor="password">Role</label>
+                      <Select
+                          showSearch
+                          style={{width: `100%`}}
+                          // placeholder="Select a ticket to buy"
+                          optionFilterProp="children"
+                          onChange={this.onChangeRole}
+                          defaultValue={'user'}
+                          // onFocus={onFocus}
+                          // onBlur={onBlur}
+                          // onSearch={onSearch}
+                          filterOption={(input, option) =>
+                              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                          }
+                      >
+                          <Option value="user">User</Option>
+                          <Option value="oil_depot_shop">Oil depot shop</Option>
+                          {/*<Option value="QW5ZGQ">Mobil Super Motor Synthetic [SL 10W-40, MA2] 0.8L - 140.000*/}
+                          {/*    ₫</Option>*/}
+                      </Select>
+                  </div>
 
                 <div className="form-group">
                   <button className="btn btn-primary btn-block">Sign Up</button>
