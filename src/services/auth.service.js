@@ -27,12 +27,12 @@ class AuthService {
     return axios.post(API_URL + "signup", {
       username,
       email,
-      password,role
+      password,roles:[role]
     });
   }
 
   getCurrentUser() {
-    return JSON.parse(localStorage.getItem('user'));;
+    return JSON.parse(localStorage.getItem('user'));
   }
 }
 

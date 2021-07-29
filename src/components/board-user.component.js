@@ -50,6 +50,7 @@ export default class BoardUser extends Component {
             redeemTickets: [],
             selectedRowKeys: [],
             ownedItems: 0,
+            shopUsername:'oildepotshop',
             balance: 0
         };
         this.myRef = React.createRef();
@@ -386,6 +387,10 @@ export default class BoardUser extends Component {
         this.setState({recipient: recipient.target.value});
     }
 
+    onChangeShopUsername = (shopUsername) => {
+        this.setState({shopUsername: shopUsername.target.value});
+    }
+
     handleOk = async () => {
         try {
             console.log('===>', await this.myRef1.current.validateFields())
@@ -487,7 +492,7 @@ export default class BoardUser extends Component {
 
         try {
             // await this.myRef.current.validateFields()
-            let result = await UserService.useTicket(this.state.selectedRowKeys)
+            let result = await UserService.useTicket(this.state.selectedRowKeys,this.state.shopUsername)
             console.log(`===>`, result)
             if (result.data && result.data.success) {
                 // console.log('result.data.data', result.data.data)
@@ -653,6 +658,8 @@ export default class BoardUser extends Component {
                                     </TabPane>
                                 </> : <TabPane tab="Tickets" key="2">
                                     <div style={{marginBottom: 16, width: `100%`}}>
+                                        {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] !== 'OIL_DEPOT_SHOP' &&
+                                        ( <Input style={{width:170,marginRight:5}} value={this.state.shopUsername} placeholder="Shop's username" onChange={this.onChangeShopUsername}/>)}
                                         <Button type="primary" onClick={this.confirmUseTickets} disabled={!hasSelected}
                                                 loading={loading}>
                                             {this.state.roles && this.state.roles.length > 0 && this.state.roles[0] === 'OIL_DEPOT_SHOP' ?
